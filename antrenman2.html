@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Kral'ın Atlet Paneli</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Kral Atlet">
+    
+    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIktyYWwnx24gQXRsZXQgUGFuZWxpIiwKICAic2hvcnRfbmFtZSI6ICJLcmFsIEF0bGV0IiwKICAic3RhcnRfdXJsIjogIi4vaW5kZXguaHRtbCIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiIzBmMGYxMiIsCiAgInRoZW1lX2NvbG9yIjogIiNmZjQ3NTciCn0=">
+
+    <style>
+        body {
+            font-family: '-apple-system', BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #0f0f12;
+            color: #e4e4e7;
+            margin: 0;
+            padding: 15px;
+            padding-top: calc(15px + env(safe-area-inset-top)); /* iOS Çentik koruması */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 950px;
+        }
+
+        h2, h3 {
+            text-align: center;
+            color: #ff4757;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 20px;
+            font-weight: 800;
+        }
+
+        .summary-wrapper {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+
+        .summary-card {
+            background: linear-gradient(135deg, #1e1e24, #121215);
+            border: 1px solid #2f2f37;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+        }
+
+        .summary-card h4 {
+            margin: 0 0 5px 0;
+            color: #a1a1aa;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .summary-card .value {
+            font-size: 22px;
+            font-weight: bold;
+            color: #ffa500;
+        }
+
+        .summary-card .value.lift { color: #ff4757; }
+        .summary-card .value.cardio { color: #00a8ff; }
+        .summary-card .value.total { color: #2ed573; font-size: 26px; }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        @media(min-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        .card {
+            background-color: #18181b;
+            border: 1px solid #27272a;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 12px;
+        }
+
+        label {
+            font-size: 13px;
+            margin-bottom: 6px;
+            color: #a1a1aa;
+            font-weight: 600;
+        }
+
+        input, select {
+            background-color: #27272a;
+            border: 1px solid #3f3f46;
+            color: #fff;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 15px;
+            outline: none;
+            -webkit-appearance: none; /* iOS için select temizliği */
+        }
+
+        .row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .row .form-group {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .set-title {
+            font-size: 12px;
+            color: #ff4757;
+            font-weight: bold;
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        button {
+            background: linear-gradient(90deg, #ff4757, #ff6b81);
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            text-transform: uppercase;
+        }
+
+        button.cardio-btn {
+            background: linear-gradient(90deg, #00a8ff, #00c4ff);
+        }
+
+        .day-container {
+            margin-bottom: 10px;
+            background-color: #18181b;
+            border: 1px solid #27272a;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .day-header {
+            background-color: #202024;
+            padding: 15px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid #ff4757;
+        }
+
+        .day-header.has-cardio {
+            border-left-color: #00a8ff;
+        }
+
+        .day-content {
+            padding: 12px;
+            display: none;
+            background-color: #141416;
+        }
+
+        .exercise-item {
+            background-color: #1e1e24;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #2d2d35;
+        }
+
+        .exercise-info h4 {
+            margin: 0 0 6px 0;
+            font-size: 15px;
+            color: #fff;
+        }
+
+        .sets-display {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 13px;
+        }
+
+        .set-row span { color: #ff4757; font-weight: bold; }
+        .cardio-row span { color: #00a8ff; font-weight: bold; }
+
+        .delete-btn {
+            background: transparent;
+            color: #ff4757;
+            border: 1px solid #ff4757;
+            padding: 5px 10px;
+            border-radius: 6px;
+            width: auto;
+            font-size: 11px;
+        }
+
+        .chart-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-end;
+            height: 240px;
+            border-left: 2px solid #3f3f46;
+            border-bottom: 2px solid #3f3f46;
+            padding: 15px;
+            margin-top: 15px;
+            background: #111113;
+            border-radius: 4px;
+        }
+
+        .chart-bar-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 45%;
+        }
+
+        .chart-bar {
+            width: 60px;
+            background: linear-gradient(0deg, #ff4757, #ff6b81);
+            border-radius: 8px 8px 0 0;
+            transition: height 0.5s ease;
+            position: relative;
+            display: flex;
+            justify-content: center;
+        }
+
+        .chart-bar-value {
+            position: absolute;
+            top: -40px;
+            font-size: 12px;
+            font-weight: bold;
+            white-space: nowrap;
+            text-align: center;
+            background-color: #27272a;
+            padding: 4px 6px;
+            border-radius: 4px;
+            border: 1px solid #3f3f46;
+        }
+
+        .chart-label {
+            margin-top: 10px;
+            font-size: 12px;
+            color: #a1a1aa;
+            font-weight: bold;
+        }
+
+        .comparison-card {
+            background-color: #202024;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-left: 4px solid #ffa500;
+        }
+
+        .status-up { color: #2ed573; }
+        .status-down { color: #ff4757; }
+        .status-same { color: #ffa500; }
+        
+        .no-data {
+            color: #71717a;
+            font-style: italic;
+            text-align: center;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Kral'ın Mobil Atlet Paneli</h2>
+    
+    <div class="summary-wrapper">
+        <div class="summary-card">
+            <h4>İdman Yakımı</h4>
+            <div class="value lift" id="dayLiftCal">0 kcal</div>
+        </div>
+        <div class="summary-card">
+            <h4>Kardiyo Yakımı</h4>
+            <div class="value cardio" id="dayCardioCal">0 kcal</div>
+        </div>
+        <div class="summary-card" style="border: 1px dashed #2ed573; background: linear-gradient(135deg, #132519, #121215);">
+            <h4>🔥 TOPLAM YAKIM</h4>
+            <div class="value total" id="dayTotalCal">0 kcal</div>
+        </div>
+        <div class="summary-card">
+            <h4>Kardiyo</h4>
+            <div class="value" id="dayCardioMin" style="color: #00a8ff;">0 dk</div>
+        </div>
+    </div>
+
+    <div class="main-grid">
+        <div>
+            <div class="card">
+                <h3 style="text-align: left; margin-top: 0; font-size: 16px; color: #fff;">💪 Ağırlık Seti Ekle</h3>
+                <div class="row">
+                    <div class="form-group">
+                        <label>Hafta</label>
+                        <select id="workoutWeek" onchange="loadData(); updateAnalytics();">
+                            <option value="Hafta 1">Hafta 1</option>
+                            <option value="Hafta 2">Hafta 2</option>
+                            <option value="Hafta 3">Hafta 3</option>
+                            <option value="Hafta 4">Hafta 4</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Gün</label>
+                        <select id="workoutDay" onchange="loadData();">
+                            <option value="Pazartesi">Pazartesi</option>
+                            <option value="Salı">Salı</option>
+                            <option value="Çarşamba">Çarşamba</option>
+                            <option value="Perşembe">Perşembe</option>
+                            <option value="Cuma">Cuma</option>
+                            <option value="Cumartesi">Cumartesi</option>
+                            <option value="Pazar">Pazar</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="form-group">
+                        <label>Kas Grubu</label>
+                        <select id="muscleGroup" onchange="updateExerciseOptions()">
+                            <option value="Göğüs">Göğüs</option>
+                            <option value="Sırt">Sırt</option>
+                            <option value="Omuz">Omuz</option>
+                            <option value="Bacak">Bacak</option>
+                            <option value="Biceps">Biceps</option>
+                            <option value="Triceps">Triceps</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Egzersiz Seç</label>
+                        <select id="exerciseNameSelect"></select>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="form-group">
+                        <div class="set-title">1. Set (Ağır)</div>
+                        <div class="row">
+                            <input type="number" id="weight1" placeholder="kg" step="0.5">
+                            <input type="number" id="reps1" placeholder="tekrar">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="set-title">2. Set (Back-off)</div>
+                        <div class="row">
+                            <input type="number" id="weight2" placeholder="kg" step="0.5">
+                            <input type="number" id="reps2" placeholder="tekrar">
+                        </div>
+                    </div>
+                </div>
+                <button onclick="addExercise()">Setleri Kaydet</button>
+            </div>
+
+            <div class="card" style="border-color: #004466;">
+                <h3 style="text-align: left; margin-top: 0; font-size: 16px; color: #fff;">🏃‍♂️ Kardiyo Ekle</h3>
+                <div class="row">
+                    <div class="form-group" style="flex: 2;">
+                        <label>Kardiyo Tipi</label>
+                        <input type="text" id="cardioName" placeholder="Örn: Koşu Bandı">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>Süre (dk)</label>
+                        <input type="number" id="cardioDuration" placeholder="30">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="form-group">
+                        <label>Hız (km/s)</label>
+                        <input type="number" id="cardioSpeed" placeholder="6.0" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label>Eğim (%)</label>
+                        <input type="number" id="cardioIncline" placeholder="10" step="0.5">
+                    </div>
+                </div>
+                <button class="cardio-btn" onclick="addCardio()">Kardiyoyu Kaydet</button>
+            </div>
+        </div>
+
+        <div>
+            <div class="analytics-section" style="height: 100%;">
+                <div>
+                    <h3 style="font-size: 16px; margin-top: 0; color: #fff;">📊 Akıllı Güç Grafiği</h3>
+                    <div class="form-group">
+                        <label>Egzersiz</label>
+                        <select id="analyticsExercise" onchange="updateAnalytics()"></select>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-bar-wrapper">
+                        <div class="chart-bar" id="barWeekPrev" style="height: 5%;"><span class="chart-bar-value" id="valWeekPrev">0 kg</span></div>
+                        <div class="chart-label" id="labelWeekPrev">Önceki</div>
+                    </div>
+                    <div class="chart-bar-wrapper">
+                        <div class="chart-bar" id="barWeekCurrent" style="height: 5%; background: linear-gradient(0deg, #2ed573, #7bed9f);"><span class="chart-bar-value" id="valWeekCurrent">0 kg</span></div>
+                        <div class="chart-label" id="labelWeekCurrent">Seçili</div>
+                    </div>
+                </div>
+
+                <div class="comparison-card" id="compCard">
+                    <div>
+                        <strong style="font-size: 13px;">Güç Endeksi:</strong>
+                        <div id="compDetails" style="font-size: 12px; color: #a1a1aa; margin-top: 4px; line-height: 16px;">Veri bekleniyor...</div>
+                    </div>
+                    <div id="compStatus" style="font-weight: bold; font-size: 14px; white-space: nowrap; margin-left: 10px;">--</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h3 style="text-align: left; margin-top: 20px; font-size: 18px;">📋 Haftalık Detaylar</h3>
+    <div id="weeklyRoutine"></div>
+</div>
+
+<script>
+    const daysOfWeek = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"];
+    const exerciseLibrary = {
+        "Göğüs": ["Incline Dumbbell Press ⭐", "Bench Press ⚡", "Incline Hammer Press", "Chest Fly (Cable/Machine)", "Dips", "Flat Bench Press (Barbell)", "Flat Bench Press (Dumbbell)", "Incline Bench Press (Barbell)", "Decline Bench Press", "Machine Chest Press", "Cable Crossover (High to Low)", "Cable Crossover (Low to High)", "Pec Deck Fly", "Push-Up (Şınav)"],
+        "Sırt": ["Seated Row ⚡", "Lat Pulldown (Wide Grip)", "Lat Pulldown (Close Grip)", "Chest Supported T-Bar Row", "Seated Cable Row", "Single Arm Dumbbell Row", "Barbell Deadlift", "Rack Pull", "Barbell Row", "Barfiks (Base)", "Straight Arm Pullover", "Meadows Row", "Machine Low Row", "Hyperextension"],
+        "Omuz": ["Machine Shoulder Press ⚡", "Dumbbell Shoulder Press", "Lateral Raise (Dumbbell)", "Lateral Raise (Cable)", "Machine Lateral Raise", "Barbell Overhead Press", "Smith Machine Press", "Rear Delt Fly (Dumbbell)", "Rear Delt Fly (Machine)", "Face Pull", "Upright Row", "Front Raise"],
+        "Bacak": ["Standing Lunge ⚡", "Hack Squat", "Leg Press", "Leg Extension", "Lying Leg Curl", "Seated Leg Curl", "Romanian Deadlift", "Barbell Back Squat", "Barbell Front Squat", "Bulgarian Split Squat", "Walking Lunges", "Standing Calf Raise", "Seated Calf Raise", "Hip Thrust"],
+        "Biceps": ["Incline Dumbbell Curl", "Preacher Curl", "Hammer Curl (Dumbbell)", "Rope Hammer Curl", "Barbell Curl", "Ez-Bar Curl", "Dumbbell Biceps Curl", "Concentration Curl", "Spider Curl", "Cable Biceps Curl"],
+        "Triceps": ["Lying Cable Triceps Extension ⭐", "Triceps Rope Pushdown", "Triceps Straight Bar Pushdown", "Overhead Cable Extension", "Skullcrusher", "Close-Grip Bench Press", "Dumbbell Overhead Extension", "Triceps Dips", "Dumbbell Kickback"]
+    };
+
+    document.addEventListener("DOMContentLoaded", () => {
+        renderDays(); updateExerciseOptions(); loadData(); updateAnalyticsOptions(); updateAnalytics();
+        // iOS Safari için Service Worker simülasyonu (PWA aktifleşmesi için)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('data:text/javascript;base64,c2VsZi5hZGRFdmVudExpc3RlbmVyKCdmaXRjaCcsIGZ1bmN0aW9uKGV2ZW50KSB7fSk7').catch(()=>{});
+        }
+    });
+
+    function updateExerciseOptions() {
+        const group = document.getElementById("muscleGroup").value;
+        const select = document.getElementById("exerciseNameSelect");
+        select.innerHTML = "";
+        exerciseLibrary[group].forEach(ex => select.appendChild(new Option(ex, ex)));
+    }
+
+    function renderDays() {
+        const routineContainer = document.getElementById("weeklyRoutine");
+        routineContainer.innerHTML = "";
+        daysOfWeek.forEach(day => {
+            const dayDiv = document.createElement("div");
+            dayDiv.className = "day-container";
+            dayDiv.innerHTML = `
+                <div class="day-header" id="header-${day}" onclick="toggleDay('${day}')">
+                    <span>${day}</span><span id="icon-${day}">▼</span>
+                </div>
+                <div class="day-content" id="content-${day}"><div id="list-${day}"></div></div>
+            `;
+            routineContainer.appendChild(dayDiv);
+        });
+    }
+
+    function toggleDay(day) {
+        const content = document.getElementById(`content-${day}`);
+        const icon = document.getElementById(`icon-${day}`);
+        content.style.display = (content.style.display === "block") ? "none" : "block";
+        icon.innerText = (content.style.display === "block") ? "▲" : "▼";
+    }
+
+    function calculate1RM(weight, reps) {
+        if (reps === 0 || weight === 0) return 0;
+        return reps === 1 ? weight : weight * (1 + (reps / 30));
+    }
+
+    function calculateCardioCalories(duration, speed, incline) {
+        let baseMet = 3.5 + (0.1 * speed * 16.67) + (1.8 * speed * 16.67 * (incline / 100));
+        return Math.round((baseMet / 3.5) * 3.5 * 75 / 200 * duration);
+    }
+
+    function addExercise() {
+        const week = document.getElementById("workoutWeek").value;
+        const day = document.getElementById("workoutDay").value;
+        const name = document.getElementById("exerciseNameSelect").value;
+        const w1 = parseFloat(document.getElementById("weight1").value);
+        const r1 = parseInt(document.getElementById("reps1").value);
+        const w2 = parseFloat(document.getElementById("weight2").value);
+        const r2 = parseInt(document.getElementById("reps2").value);
+
+        if(isNaN(w1) || isNaN(r1) || isNaN(w2) || isNaN(r2)) { alert("Bilgileri tam gir kral!"); return; }
+
+        const data = { id: Date.now(), type: 'lift', week, day, name, set1: {weight: w1, reps: r1}, set2: {weight: w2, reps: r2}, calories: 45 };
+        saveItem(data);
+        document.getElementById("weight1").value = ""; document.getElementById("reps1").value = "";
+        document.getElementById("weight2").value = ""; document.getElementById("reps2").value = "";
+        postUpdate(day);
+    }
+
+    function addCardio() {
+        const week = document.getElementById("workoutWeek").value;
+        const day = document.getElementById("workoutDay").value;
+        const name = document.getElementById("cardioName").value.trim() || "Kardiyo Seansı";
+        const duration = parseInt(document.getElementById("cardioDuration").value);
+        const speed = parseFloat(document.getElementById("cardioSpeed").value);
+        const incline = parseFloat(document.getElementById("cardioIncline").value) || 0;
+
+        if(isNaN(duration) || isNaN(speed)) { alert("Süre ve hız doldur kral!"); return; }
+
+        const calories = calculateCardioCalories(duration, speed, incline);
+        const data = { id: Date.now(), type: 'cardio', week, day, name, duration, speed, incline, calories };
+        saveItem(data);
+        document.getElementById("cardioName").value = ""; document.getElementById("cardioDuration").value = "";
+        document.getElementById("cardioSpeed").value = ""; document.getElementById("cardioIncline").value = "";
+        postUpdate(day);
+    }
+
+    function saveItem(item) {
+        let store = localStorage.getItem("kralAthletePanels") ? JSON.parse(localStorage.getItem("kralAthletePanels")) : [];
+        store.push(item); localStorage.setItem("kralAthletePanels", JSON.stringify(store));
+    }
+
+    function postUpdate(day) {
+        loadData(); updateAnalyticsOptions(); updateAnalytics();
+        document.getElementById(`content-${day}`).style.display = "block";
+        document.getElementById(`icon-${day}`).innerText = "▲";
+    }
+
+    function loadData() {
+        const currentWeek = document.getElementById("workoutWeek").value;
+        const selectedDay = document.getElementById("workoutDay").value;
+        let store = localStorage.getItem("kralAthletePanels") ? JSON.parse(localStorage.getItem("kralAthletePanels")) : [];
+        let dayLiftCal = 0, dayCardioCal = 0, dayCardioMin = 0;
+
+        daysOfWeek.forEach(day => {
+            const listDiv = document.getElementById(`list-${day}`);
+            listDiv.innerHTML = ""; document.getElementById(`header-${day}`).classList.remove("has-cardio");
+            let dayData = store.filter(item => item.week === currentWeek && item.day === day);
+            if(dayData.length === 0) listDiv.innerHTML = `<div class="no-data">Antrenman kaydı yok kral.</div>`;
+
+            dayData.forEach(item => {
+                const div = document.createElement("div"); div.className = "exercise-item";
+                if(item.type === 'lift') {
+                    if(day === selectedDay) dayLiftCal += item.calories || 45;
+                    div.innerHTML = `
+                        <div class="exercise-info">
+                            <h4>💪 ${item.name}</h4>
+                            <div class="sets-display">
+                                <div class="set-row">1. Set: <span>${item.set1.weight} kg</span> x ${item.set1.reps}</div>
+                                <div class="set-row">2. Set: <span>${item.set2.weight} kg</span> x ${item.set2.reps}</div>
+                            </div>
+                        </div><button class="delete-btn" onclick="deleteItem(${item.id})">Sil</button>`;
+                } else if(item.type === 'cardio') {
+                    if(day === selectedDay) { dayCardioCal += item.calories; dayCardioMin += item.duration; }
+                    document.getElementById(`header-${day}`).classList.add("has-cardio");
+                    div.innerHTML = `
+                        <div class="exercise-info">
+                            <h4 style="color:#00a8ff;">🏃‍♂️ ${item.name}</h4>
+                            <div class="sets-display cardio-row">
+                                <div><span>${item.duration} dk</span> | <span>${item.speed} km/s</span> | <span>%${item.incline}</span></div>
+                                <div style="color: #2ed573; font-weight: bold; margin-top:2px;">~${item.calories} kcal</div>
+                            </div>
+                        </div><button class="delete-btn" onclick="deleteItem(${item.id})">Sil</button>`;
+                }
+                listDiv.appendChild(div);
+            });
+        });
+        document.getElementById("dayLiftCal").innerText = dayLiftCal + " kcal";
+        document.getElementById("dayCardioCal").innerText = dayCardioCal + " kcal";
+        document.getElementById("dayTotalCal").innerText = (dayLiftCal + dayCardioCal) + " kcal";
+        document.getElementById("dayCardioMin").innerText = dayCardioMin + " dk";
+    }
+
+    function updateAnalyticsOptions() {
+        const select = document.getElementById("analyticsExercise"); const currentVal = select.value; select.innerHTML = "";
+        let store = localStorage.getItem("kralAthletePanels") ? JSON.parse(localStorage.getItem("kralAthletePanels")) : [];
+        let uniqueNames = [...new Set(store.filter(i => i.type === 'lift').map(i => i.name))];
+        if(uniqueNames.length === 0) { select.appendChild(new Option("Önce ağırlık girin", "")); return; }
+        uniqueNames.forEach(name => select.appendChild(new Option(name, name)));
+        if(uniqueNames.includes(currentVal)) select.value = currentVal;
+    }
+
+    function updateAnalytics() {
+        const exercise = document.getElementById("analyticsExercise").value;
+        const currentWeekStr = document.getElementById("workoutWeek").value;
+        const currentWeekNum = parseInt(currentWeekStr.replace("Hafta ", ""));
+        const prevWeekStr = "Hafta " + (currentWeekNum - 1);
+        let store = localStorage.getItem("kralAthletePanels") ? JSON.parse(localStorage.getItem("kralAthletePanels")) : [];
+        let currentData = store.find(i => i.name === exercise && i.week === currentWeekStr && i.type === 'lift');
+        let prevData = store.find(i => i.name === exercise && i.week === prevWeekStr && i.type === 'lift');
+
+        let currentPower = currentData ? calculate1RM(currentData.set1.weight, currentData.set1.reps) : 0;
+        let prevPower = prevData ? calculate1RM(prevData.set1.weight, prevData.set1.reps) : 0;
+
+        document.getElementById("labelWeekCurrent").innerText = currentWeekStr;
+        document.getElementById("labelWeekPrev").innerText = currentWeekNum > 1 ? prevWeekStr : "Önceki";
+        document.getElementById("valWeekCurrent").innerHTML = currentData ? `${currentData.set1.weight}kg x ${currentData.set1.reps}<br><span style='color:#2ed573; font-size:10px;'>Endeks: ${currentPower.toFixed(1)}</span>` : "Veri Yok";
+        document.getElementById("valWeekPrev").innerHTML = prevData ? `${prevData.set1.weight}kg x ${prevData.set1.reps}<br><span style='color:#ff4757; font-size:10px;'>Endeks: ${prevPower.toFixed(1)}</span>` : "Veri Yok";
+
+        let max = Math.max(currentPower, prevPower, 50);
+        document.getElementById("barWeekCurrent").style.height = (currentPower > 0 ? (currentPower/max)*85 : 5) + "%";
+        document.getElementById("barWeekPrev").style.height = (prevPower > 0 ? (prevPower/max)*85 : 5) + "%";
+
+        const details = document.getElementById("compDetails"), status = document.getElementById("compStatus"), card = document.getElementById("compCard");
+        if(!currentData) { details.innerText = "Veri bekleniyor kral."; status.innerText = "--"; card.style.borderLeftColor = "#ffa500"; return; }
+        if(currentWeekNum === 1) { details.innerText = "İlerleyen haftalarda gelişim listelenecek."; status.innerText = "BAŞLANGIÇ"; status.className = "status-same"; card.style.borderLeftColor = "#ffa500"; return; }
+        if(!prevData) { details.innerText = "Önceki haftanın kaydı bulunamadı."; status.innerText = "EKSİK VERİ"; status.className = "status-same"; card.style.borderLeftColor = "#3f3f46"; return; }
+
+        let powerDiff = currentPower - prevPower, weightDiff = currentData.set1.weight - prevData.set1.weight, repDiff = currentData.set1.reps - prevData.set1.reps;
+        if(powerDiff > 0) {
+            let aciklama = `Saf gücün arttı! `;
+            if(weightDiff > 0 && repDiff < 0) aciklama += `Yüksek kilo mekanik gerilimi artırdı, tekrar düşse de daha güçlüsün.`;
+            else if(weightDiff < 0 && repDiff > 0) aciklama += `Yüksek tekrar saf efor kapasiteni yukarı taşıdı.`;
+            else aciklama += `Hem ağırlık hem tekrar dengen yükselişte.`;
+            details.innerText = `${aciklama} (${weightDiff >= 0 ? '+' : ''}${weightDiff}kg, ${repDiff >= 0 ? '+' : ''}${repDiff}tk)`;
+            status.innerText = `▲ KAZANIM`; status.className = "status-up"; card.style.borderLeftColor = "#2ed573";
+        } else if(powerDiff < 0) {
+            details.innerText = `Efor seviyesinde düşüş var. Toparlanmaya dikkat et kral. (${weightDiff}kg, ${repDiff}tk)`;
+            status.innerText = `▼ DÜŞÜŞ`; status.className = "status-down"; card.style.borderLeftColor = "#ff4757";
+        } else {
+            details.innerText = "Geçen hafta ile matematiksel olarak birebir aynı seviyedesin.";
+            status.innerText = "STABİL"; status.className = "status-same"; card.style.borderLeftColor = "#ffa500";
+        }
+    }
+
+    function deleteItem(id) {
+        let store = JSON.parse(localStorage.getItem("kralAthletePanels")).filter(item => item.id !== id);
+        localStorage.setItem("kralAthletePanels", JSON.stringify(store)); loadData(); updateAnalyticsOptions(); updateAnalytics();
+    }
+</script>
+</body>
+</html>
